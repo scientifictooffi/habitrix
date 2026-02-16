@@ -1,7 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import type {RootStackParamList} from '../navigation/AppNavigator';
+import React from 'react';
 
-function ValueScreen() {
+type Props = NativeStackScreenProps<RootStackParamList, 'Value'>;
+function ValueScreen({navigation}: Props) {
   const safeAreaInsets = useSafeAreaInsets();
   const bottomInset = Math.max(safeAreaInsets.bottom, 16);
 
@@ -41,12 +45,14 @@ function ValueScreen() {
         <Pressable
           accessibilityRole="button"
           style={[styles.button, styles.primaryButton]}
+          onPress={() => navigation.navigate('OnboardingGoal')}
         >
           <Text style={styles.primaryText}>Get started</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           style={[styles.button, styles.secondaryButton]}
+          onPress={() => navigation.navigate('Auth')}
         >
           <Text style={styles.secondaryText}>I already have an account</Text>
         </Pressable>
