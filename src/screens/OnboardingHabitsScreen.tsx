@@ -63,6 +63,11 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
         { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 },
       ]}
     >
+      <View style={styles.topBar}>
+        <Pressable onPress={() => navigation.goBack()}>
+          <Text style={styles.backText}>← Назад</Text>
+        </Pressable>
+      </View>
       <Text style={styles.title}>Выбери 3 привычки</Text>
       <Text style={styles.subtitle}>
         Это поможет настроить твой первый трекер
@@ -152,6 +157,16 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 12,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  backText: {
+    color: '#F5F7FB',
+    fontSize: 16,
+    fontWeight: '600',
   },
   title: {
     fontSize: 22,

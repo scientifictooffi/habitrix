@@ -2,10 +2,12 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingGoal'>;
 export default function OnboardingGoalScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const [selectedGoal, setSelectedGoal] = React.useState<string | null>(null);
   const goals = [
     {
@@ -27,7 +29,12 @@ export default function OnboardingGoalScreen({ navigation }: Props) {
   const isNextDisabled = !selectedGoal;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 },
+      ]}
+    >
       <View style={styles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Назад</Text>
@@ -81,16 +88,14 @@ export default function OnboardingGoalScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
     backgroundColor: '#0B0F14',
-    paddingTop: 70,
     paddingHorizontal: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
     color: '#F5F7FB',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   cardWrapper: {
     marginBottom: 12,
@@ -118,7 +123,7 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   backText: {
     color: '#F5F7FB',
