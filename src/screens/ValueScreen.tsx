@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/AppNavigator';
 import React from 'react';
+import { Linking } from 'react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Value'>;
 function ValueScreen({navigation}: Props) {
@@ -57,7 +58,21 @@ function ValueScreen({navigation}: Props) {
           <Text style={styles.secondaryText}>I already have an account</Text>
         </Pressable>
         <Text style={styles.legal}>
-          By continuing you agree to our Terms & Privacy Policy.
+          By continuing you agree to our{' '}
+          <Text
+            style={styles.link}
+            onPress={() => Linking.openURL('https://yourapp.com/terms')}
+          >
+            Terms
+          </Text>{' '}
+          &{' '}
+          <Text
+            style={styles.link}
+            onPress={() => Linking.openURL('https://yourapp.com/privacy')}
+          >
+            Privacy Policy
+          </Text>
+          .
         </Text>
       </View>
     </View>
@@ -84,6 +99,11 @@ const styles = StyleSheet.create({
     color: '#F5F7FB',
     letterSpacing: 0.5,
   },
+  link: {
+    color: '#7C5CFF',
+    fontWeight: '600',
+  },
+
   badge: {
     marginLeft: 10,
     paddingHorizontal: 8,

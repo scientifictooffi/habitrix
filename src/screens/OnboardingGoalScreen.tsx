@@ -2,10 +2,30 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingGoal'>;
-
 export default function OnboardingGoalScreen({ navigation }: Props) {
+  const [selectedGoal, setSelectedGoal] = React.useState<string | null>(null);
+  const goals = [
+    {
+      id: 'health',
+      title: 'Health',
+      subtitle: 'Sleep, water, health food',
+    },
+    {
+      id: 'productivity',
+      title: 'Productivity',
+      subtitle: 'Focus, tasks, order',
+    },
+    {
+      id: 'discipline',
+      title: 'Discipline',
+      subtitle: 'Consistency & routine',
+    },
+  ];
+  const isNextDisabled = !selectedGoal;
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -16,18 +36,44 @@ export default function OnboardingGoalScreen({ navigation }: Props) {
 
       <Text style={styles.title}>Выбери цель</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Health</Text>
-        <Text style={styles.cardSubtitle}>Sleep, water, health food</Text>
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Productivity</Text>
-        <Text style={styles.cardSubtitle}>Sleep, water, health food</Text>
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Discipline</Text>
-        <Text style={styles.cardSubtitle}>Sleep, water, health food</Text>
-      </View>
+      {goals.map(goal => {
+        const isSelected = selectedGoal === goal.id;
+        const tintColor = isSelected
+          ? 'rgba(124, 92, 255, 0.35)'
+          : 'rgba(124, 92, 255, 0.18)';
+        const cardStyle = [
+          styles.cardBase,
+          isSelected && styles.cardSelected,
+          !isLiquidGlassSupported && styles.cardFallback,
+        ];
+
+        return (
+          <Pressable
+            key={goal.id}
+            onPress={() => setSelectedGoal(goal.id)}
+            style={styles.cardWrapper}
+          >
+            <LiquidGlassView
+              style={cardStyle}
+              effect="clear"
+              interactive
+              colorScheme="dark"
+              tintColor={tintColor}
+            >
+              <Text style={styles.cardTitle}>{goal.title}</Text>
+              <Text style={styles.cardSubtitle}>{goal.subtitle}</Text>
+            </LiquidGlassView>
+          </Pressable>
+        );
+      })}
+
+      <Pressable
+        disabled={isNextDisabled}
+        onPress={() => navigation.navigate('OnboardingHabits')}
+        style={[styles.nextButton, isNextDisabled && styles.nextButtonDisabled]}
+      >
+        <Text style={styles.nextButtonText}>Далее</Text>
+      </Pressable>
     </View>
   );
 }
@@ -46,13 +92,18 @@ const styles = StyleSheet.create({
     color: '#F5F7FB',
     marginBottom: 24,
   },
-  card: {
-    backgroundColor: '#141A22',
+  cardWrapper: {
+    marginBottom: 12,
+  },
+  cardBase: {
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#2C3440',
-    marginBottom: 12,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    overflow: 'hidden',
+  },
+  cardFallback: {
+    backgroundColor: 'rgba(20, 26, 34, 0.85)',
   },
   cardTitle: {
     fontSize: 18,
@@ -73,5 +124,23 @@ const styles = StyleSheet.create({
     color: '#F5F7FB',
     fontSize: 16,
     fontWeight: '600',
+  },
+  cardSelected: {
+    borderColor: '#7C5CFF',
+  },
+  nextButton: {
+    marginTop: 24,
+    backgroundColor: '#7C5CFF',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  nextButtonDisabled: {
+    backgroundColor: '#2C3440',
+  },
+  nextButtonText: {
+    color: '#0B0F14',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
