@@ -4,11 +4,13 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
+import {useOnboardingStore} from '../store/onboardingStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingGoal'>;
 export default function OnboardingGoalScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const [selectedGoal, setSelectedGoal] = React.useState<string | null>(null);
+  const goal = useOnboardingStore(state => state.goal);
+  const setGoal = useOnboardingStore(state => state.setGoal);
   const goals = [
     {
       id: 'health',
@@ -26,7 +28,7 @@ export default function OnboardingGoalScreen({ navigation }: Props) {
       subtitle: 'Consistency & routine',
     },
   ];
-  const isNextDisabled = !selectedGoal;
+  const isNextDisabled = !goal;
 
   return (
     <View
@@ -43,8 +45,8 @@ export default function OnboardingGoalScreen({ navigation }: Props) {
 
       <Text style={styles.title}>Выбери цель</Text>
 
-      {goals.map(goal => {
-        const isSelected = selectedGoal === goal.id;
+      {goals.map(goalOption => {
+        const isSelected = goal === goalOption.id;
         const tintColor = isSelected
           ? 'rgba(124, 92, 255, 0.35)'
           : 'rgba(124, 92, 255, 0.18)';
@@ -56,8 +58,8 @@ export default function OnboardingGoalScreen({ navigation }: Props) {
 
         return (
           <Pressable
-            key={goal.id}
-            onPress={() => setSelectedGoal(goal.id)}
+            key={goalOption.id}
+            onPress={() => setGoal(goalOption.id)}
             style={styles.cardWrapper}
           >
             <LiquidGlassView
@@ -67,8 +69,8 @@ export default function OnboardingGoalScreen({ navigation }: Props) {
               colorScheme="dark"
               tintColor={tintColor}
             >
-              <Text style={styles.cardTitle}>{goal.title}</Text>
-              <Text style={styles.cardSubtitle}>{goal.subtitle}</Text>
+              <Text style={styles.cardTitle}>{goalOption.title}</Text>
+              <Text style={styles.cardSubtitle}>{goalOption.subtitle}</Text>
             </LiquidGlassView>
           </Pressable>
         );
