@@ -3,56 +3,28 @@ import { ScrollView,Modal, Pressable, StyleSheet, Text, TextInput, View } from '
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { useOnboardingStore } from '../store/onboardingStore';
 
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingHabits'>;
 
 export default function OnboardingHabitsScreen({ navigation }: Props) {
-  const [selectedHabits, setSelectedHabits] = React.useState<string[]>([]);
   const insets = useSafeAreaInsets();
   const [isModalVisible, setIsModalVisible] = React.useState(false);
   const [customTitle, setCustomTitle] = React.useState('');
-  const [habits, setHabits] = React.useState([
-    { id: 'water', title: 'Drink water', subtitle: '8 glasses a day' },
-    { id: 'steps', title: '8,000 steps', subtitle: 'Daily walk' },
-    { id: 'reading', title: 'Read 20 min', subtitle: 'Books or articles' },
-    { id: 'sleep', title: 'Sleep before 23:00', subtitle: 'Healthy rest' },
-    { id: 'meditation', title: 'Meditate', subtitle: '10 minutes' },
-    { id: 'journal', title: 'Morning journal', subtitle: 'Write 3 lines' },
-    { id: 'stretch', title: 'Stretching', subtitle: '5 minutes' },
-    { id: 'sugar', title: 'No sugar', subtitle: 'Skip sweets today' },
-  ]);
-  const toggleHabit = (id: string) => {
-    setSelectedHabits(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(item => item !== id);
-      }
-      if (prev.length >= 3) {
-        return prev;
-      }
-      return [...prev, id];
-    });
-  };
+  const habits = useOnboardingStore(state => state.habits);
+  const selectedHabits = useOnboardingStore(state => state.selectedHabits);
+  const toggleHabit = useOnboardingStore(state => state.toggleHabit);
+  const addCustomHabit = useOnboardingStore(state => state.addCustomHabit);
   const isNextDisabled = selectedHabits.length !== 3;
 
   const openModal = () => setIsModalVisible(true);
   const closeModal = () => {setIsModalVisible(false);setCustomTitle('');};
 
-  const addCustomHabit = () => {
+  const handleAddCustomHabit = () => {
     const title = customTitle.trim();
     if (!title) return;
-
-    const newHabit = {
-      id: `custom-${Date.now()}`,
-      title,
-      subtitle: 'Custom habit',
-    };
-
-    setHabits(prev => [newHabit, ...prev]);
-
-    setSelectedHabits(prev =>
-      prev.length < 3 ? [...prev, newHabit.id] : prev,
-    );
+    addCustomHabit(title);
 
     closeModal();
   };
@@ -134,7 +106,7 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
                   customTitle.trim().length === 0 && styles.modalButtonDisabled,
                 ]}
                 disabled={customTitle.trim().length === 0}
-                onPress={addCustomHabit}
+                onPress={handleAddCustomHabit}
               >
                 <Text style={styles.modalButtonPrimaryText}>Добавить</Text>
               </Pressable>

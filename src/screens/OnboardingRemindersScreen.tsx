@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useOnboardingStore } from '../store/onboardingStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingReminders'>;
 
@@ -10,8 +11,11 @@ const TIME_OPTIONS = ['08:00', '12:00', '18:00', '21:00'];
 
 export default function OnboardingRemindersScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const [selectedTime, setSelectedTime] = React.useState('08:00');
-  const [isEnabled, setIsEnabled] = React.useState(true);
+  const reminderTime = useOnboardingStore(state => state.reminderTime);
+  const reminderEnabled = useOnboardingStore(state => state.reminderEnabled);
+  const setReminderTime = useOnboardingStore(state => state.setReminderTime);
+  const setReminderEnabled = useOnboardingStore(state => state.setReminderEnabled);
+
 
   return (
     <View
@@ -31,23 +35,23 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
 
       <View style={styles.timeBlock}>
         {TIME_OPTIONS.map(time => {
-          const isSelected = selectedTime === time;
+          const isSelected = reminderTime === time;
           return (
             <Pressable
               key={time}
-              onPress={() => setSelectedTime(time)}
+              onPress={() => setReminderTime(time)}
               style={[
                 styles.timeButton,
                 isSelected && styles.timeButtonSelected,
-                !isEnabled && styles.timeButtonDisabled,
+                !reminderEnabled && styles.timeButtonDisabled,
               ]}
-              disabled={!isEnabled}
+              disabled={!reminderEnabled}
             >
               <Text
                 style={[
                   styles.timeText,
                   isSelected && styles.timeTextSelected,
-                  !isEnabled && styles.timeTextDisabled,
+                  !reminderEnabled && styles.timeTextDisabled,
                 ]}
               >
                 {time}
@@ -59,7 +63,7 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
 
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Напоминания включены</Text>
-        <Switch value={isEnabled} onValueChange={setIsEnabled} />
+        <Switch value={reminderEnabled} onValueChange={setReminderEnabled} />
       </View>
 
       <Pressable
