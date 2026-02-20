@@ -4,11 +4,29 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppleButton } from '@invertase/react-native-apple-authentication';
+import {useOnboardingStore} from '../store/onboardingStore.ts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Auth'>;
 
 export default function AuthScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const goal = useOnboardingStore(state => state.goal);
+  const habits = useOnboardingStore(state => state.habits);
+  const selectedHabits = useOnboardingStore(state => state.selectedHabits);
+  const reminderTime = useOnboardingStore(state => state.reminderTime);
+  const reminderEnabled = useOnboardingStore(state => state.reminderEnabled);
+
+  const GOAL_LABELS: Record<string, string> = {
+    health: 'Здоровье',
+    productivity: 'продуктивность',
+    discipline: 'дисциплина',
+  };
+
+  const goalLabel = goal ? GOAL_LABELS[goal] ?? goal : '—';
+
+  const selectedHabitTitles = selectedHabits
+    .map(id => habits.find(h => h.id === id)?.title)
+    .filter(Boolean);
 
   return (
     <View
@@ -36,9 +54,10 @@ export default function AuthScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('Dashboard')}
         />
       ) : (
-        <Pressable style={[styles.button, styles.apple]}>
-          <Text style={styles.appleText}>Continue with Apple</Text>
-        </Pressable>
+        <Pressable
+          style={[styles.button, styles.apple]}
+          onPress={() => navigation.navigate('Dashboard')}
+        ></Pressable>
       )}
 
       <Pressable
@@ -52,10 +71,42 @@ export default function AuthScreen({ navigation }: Props) {
         <Text style={styles.googleText}>Sign in with Google</Text>
       </Pressable>
 
-      <Pressable style={[styles.button, styles.email]}>
+      <Pressable
+        style={[styles.button, styles.email]}
+        onPress={() => navigation.navigate('Dashboard')}
+      >
         <Text style={styles.emailText}>Continue with Email</Text>
       </Pressable>
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Твой план</Text>
 
+        <Text style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Цель: </Text>
+          <Text style={styles.summaryValue}>{goalLabel}</Text>
+        </Text>
+
+        <Text style={styles.summaryLabel}>Привычки:</Text>
+        {selectedHabitTitles.length > 0 ? (
+          selectedHabitTitles.map(title => (
+            <Text key={title} style={styles.habitItem}>
+              • {title}
+            </Text>
+          ))
+        ) : (
+          <Text style={styles.summaryValue}>—</Text>
+        )}
+
+        <Text style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Напоминания: </Text>
+          <Text style={styles.summaryValue}>
+            {reminderEnabled ? reminderTime : 'выключены'}
+          </Text>
+        </Text>
+      </View>
+
+      <Text style={styles.summaryNote}>
+        Мы сохраним это в аккаунте, чтобы ты не потерял прогресс.
+      </Text>
       <Pressable
         style={styles.skipButton}
         onPress={() => navigation.navigate('Dashboard')}
@@ -155,5 +206,41 @@ const styles = StyleSheet.create({
     color: '#9AA4B2',
     fontSize: 14,
     fontWeight: '600',
+  },
+  summaryCard: {
+    marginTop: 16,
+    backgroundColor: '#141A22',
+    borderWidth: 1,
+    borderColor: '#2C3440',
+    borderRadius: 14,
+    padding: 14,
+  },
+  summaryTitle: {
+    color: '#F5F7FB',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  summaryRow: {
+    marginTop: 6,
+  },
+  summaryLabel: {
+    color: '#9AA4B2',
+    fontSize: 14,
+  },
+  summaryValue: {
+    color: '#F5F7FB',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  habitItem: {
+    color: '#F5F7FB',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  summaryNote: {
+    marginTop: 10,
+    color: '#9AA4B2',
+    fontSize: 13,
   },
 });
