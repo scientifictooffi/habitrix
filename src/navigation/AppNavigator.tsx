@@ -6,6 +6,7 @@ import OnboardingHabitsScreen from '../screens/OnboardingHabitsScreen';
 import OnboardingRemindersScreen from '../screens/OnboardingRemindersScreen';
 import AuthScreen from '../screens/AuthScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import StatsScreen from '../screens/StatsScreen';
 
 export type RootStackParamList = {
   Value: undefined;
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   OnboardingReminders: undefined;
   Auth: undefined;
   Dashboard: undefined;
+  Stats: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -33,6 +35,7 @@ export default function AppNavigator() {
       />
       <Stack.Screen name="Auth" component={AuthScreen} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
+      <Stack.Screen name="Stats" component={StatsScreen} />
     </Stack.Navigator>
   );
 }
