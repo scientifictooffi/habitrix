@@ -12,7 +12,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCompletionsStore } from '../store/completionsStore';
 import { useOnboardingStore } from '../store/onboardingStore';
-import {getCurrentStreak, getDateKey,getWeekDateKeys,isDayComplete} from '../utils/streak.ts';
+import {
+  getCurrentStreak,
+  getDateKey,
+  getWeekDateKeys,
+  isDayComplete,
+} from '../utils/streak.ts';
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();

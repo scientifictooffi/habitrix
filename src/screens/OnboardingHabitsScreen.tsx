@@ -1,10 +1,17 @@
 import React from 'react';
-import { ScrollView,Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ScrollView,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOnboardingStore } from '../store/onboardingStore';
-
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingHabits'>;
 
@@ -19,7 +26,10 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
   const isNextDisabled = selectedHabits.length !== 3;
 
   const openModal = () => setIsModalVisible(true);
-  const closeModal = () => {setIsModalVisible(false);setCustomTitle('');};
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setCustomTitle('');
+  };
 
   const handleAddCustomHabit = () => {
     const title = customTitle.trim();
@@ -67,20 +77,17 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
           })}
         </View>
       </ScrollView>
-        <Pressable style={styles.addButton} onPress={openModal}>
-          <Text style={styles.addButtonText}>Добавить свою</Text>
-        </Pressable>
+      <Pressable style={styles.addButton} onPress={openModal}>
+        <Text style={styles.addButtonText}>Добавить свою</Text>
+      </Pressable>
 
-        <Pressable
-          disabled={isNextDisabled}
-          style={[
-            styles.nextButton,
-            isNextDisabled && styles.nextButtonDisabled,
-          ]}
-          onPress={() => navigation.navigate('OnboardingReminders')}
-        >
-          <Text style={styles.nextButtonText}>Далее</Text>
-        </Pressable>
+      <Pressable
+        disabled={isNextDisabled}
+        style={[styles.nextButton, isNextDisabled && styles.nextButtonDisabled]}
+        onPress={() => navigation.navigate('OnboardingReminders')}
+      >
+        <Text style={styles.nextButtonText}>Далее</Text>
+      </Pressable>
 
       <Modal visible={isModalVisible} transparent animationType="fade">
         <Pressable style={styles.modalOverlay} onPress={closeModal}>

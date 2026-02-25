@@ -3,8 +3,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
-import {useOnboardingStore} from '../store/onboardingStore';
+import {
+  LiquidGlassView,
+  isLiquidGlassSupported,
+} from '@callstack/liquid-glass';
+import { useOnboardingStore } from '../store/onboardingStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingGoal'>;
 export default function OnboardingGoalScreen({ navigation }: Props) {

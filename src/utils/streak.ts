@@ -44,7 +44,10 @@ export function isDayComplete(
  * Each cell is either null (empty pad) or a date key YYYY-MM-DD.
  * First day of month is placed according to weekday (Mon=0).
  */
-export function getMonthCalendarCells(year: number, month: number): (string | null)[] {
+export function getMonthCalendarCells(
+  year: number,
+  month: number,
+): (string | null)[] {
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
   const firstWeekday = first.getDay();

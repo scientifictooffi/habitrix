@@ -1,12 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {RootStackParamList} from '../navigation/AppNavigator';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 import React from 'react';
 import { Linking } from 'react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Value'>;
-function ValueScreen({navigation}: Props) {
+function ValueScreen({ navigation }: Props) {
   const safeAreaInsets = useSafeAreaInsets();
   const bottomInset = Math.max(safeAreaInsets.bottom, 16);
 

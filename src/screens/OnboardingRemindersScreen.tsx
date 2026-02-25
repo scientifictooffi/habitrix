@@ -14,8 +14,9 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
   const reminderTime = useOnboardingStore(state => state.reminderTime);
   const reminderEnabled = useOnboardingStore(state => state.reminderEnabled);
   const setReminderTime = useOnboardingStore(state => state.setReminderTime);
-  const setReminderEnabled = useOnboardingStore(state => state.setReminderEnabled);
-
+  const setReminderEnabled = useOnboardingStore(
+    state => state.setReminderEnabled,
+  );
 
   return (
     <View
@@ -75,7 +76,6 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

@@ -1,10 +1,17 @@
 import React from 'react';
-import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppleButton } from '@invertase/react-native-apple-authentication';
-import {useOnboardingStore} from '../store/onboardingStore.ts';
+import { useOnboardingStore } from '../store/onboardingStore.ts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Auth'>;
 
