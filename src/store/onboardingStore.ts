@@ -1,21 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-const storage = {
-  getItem: async (name: string) => AsyncStorage.getItem(name),
-  setItem: async (name: string, value: unknown) =>
-    AsyncStorage.setItem(
-      name,
-      typeof value === 'string' ? value : JSON.stringify(value),
-    ),
-  removeItem: async (name: string) => AsyncStorage.removeItem(name),
-};
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { pickThemeFor } from '../utils/habitTheme';
 
 export type Habit = {
   id: string;
   title: string;
   subtitle: string;
+  icon: string;
+  theme: string;
 };
 
 type OnboardingState = {
@@ -27,26 +20,74 @@ type OnboardingState = {
 
   setGoal: (goalId: string) => void;
   toggleHabit: (habitId: string) => void;
-  addCustomHabit: (title: string) => void;
+  addCustomHabit: (title: string, icon?: string, theme?: string) => void;
   setReminderTime: (time: string) => void;
   setReminderEnabled: (value: boolean) => void;
   resetOnboarding: () => void;
 };
 
 const DEFAULT_HABITS: Habit[] = [
-  { id: 'water', title: 'Drink water', subtitle: '8 glasses a day' },
-  { id: 'steps', title: '8,000 steps', subtitle: 'Daily walk' },
-  { id: 'reading', title: 'Read 20 min', subtitle: 'Books or articles' },
-  { id: 'sleep', title: 'Sleep before 23:00', subtitle: 'Healthy rest' },
-  { id: 'meditation', title: 'Meditate', subtitle: '10 minutes' },
-  { id: 'journal', title: 'Morning journal', subtitle: 'Write 3 lines' },
-  { id: 'stretch', title: 'Stretching', subtitle: '5 minutes' },
-  { id: 'sugar', title: 'No sugar', subtitle: 'Skip sweets today' },
+  {
+    id: 'work',
+    title: 'Работать',
+    subtitle: 'каждый день',
+    icon: '💻',
+    theme: 'green',
+  },
+  {
+    id: 'wakeup',
+    title: 'Вставать в 6 утра',
+    subtitle: 'каждый день',
+    icon: '🌅',
+    theme: 'purple',
+  },
+  {
+    id: 'no-sweets',
+    title: 'Без сладкого',
+    subtitle: 'каждый день',
+    icon: '🚫',
+    theme: 'charcoal',
+  },
+  {
+    id: 'gym',
+    title: 'Ходить в зал',
+    subtitle: '4 раза в неделю',
+    icon: '🏋️',
+    theme: 'lime',
+  },
+  {
+    id: 'cold-shower',
+    title: 'Холодный душ',
+    subtitle: 'каждый день',
+    icon: '💧',
+    theme: 'pink',
+  },
+  {
+    id: 'reading',
+    title: 'Читать 20 минут',
+    subtitle: 'каждый день',
+    icon: '📖',
+    theme: 'amber',
+  },
+  {
+    id: 'meditation',
+    title: 'Медитация',
+    subtitle: '10 минут',
+    icon: '🧘',
+    theme: 'cyan',
+  },
+  {
+    id: 'water',
+    title: 'Пить воду',
+    subtitle: '8 стаканов в день',
+    icon: '🥤',
+    theme: 'rose',
+  },
 ];
 
 export const useOnboardingStore = create<OnboardingState>()(
   persist(
-    (set, get) => ({
+    set => ({
       goal: null,
       habits: DEFAULT_HABITS,
       selectedHabits: [],
@@ -67,16 +108,19 @@ export const useOnboardingStore = create<OnboardingState>()(
           return { selectedHabits: [...selected, habitId] };
         }),
 
-      addCustomHabit: title =>
+      addCustomHabit: (title, icon, theme) =>
         set(state => {
           const trimmed = title.trim();
           if (!trimmed) {
             return state;
           }
+          const id = `custom-${Date.now()}`;
           const newHabit: Habit = {
-            id: `custom-${Date.now()}`,
+            id,
             title: trimmed,
-            subtitle: 'Custom habit',
+            subtitle: 'каждый день',
+            icon: icon ?? '✨',
+            theme: theme ?? pickThemeFor(id),
           };
           const nextHabits = [newHabit, ...state.habits];
           const nextSelected =
@@ -103,6 +147,22 @@ export const useOnboardingStore = create<OnboardingState>()(
           reminderEnabled: true,
         }),
     }),
-    { name: 'habitrix-onboarding', storage },
+    {
+      name: 'habitrix-onboarding',
+      storage: createJSONStorage(() => AsyncStorage),
+      version: 2,
+      migrate: (persistedState, version) => {
+        const state = persistedState as Partial<OnboardingState> | undefined;
+        if (!state) return state as OnboardingState | undefined;
+        if (version < 2) {
+          return {
+            ...state,
+            habits: DEFAULT_HABITS,
+            selectedHabits: [],
+          } as OnboardingState;
+        }
+        return state as OnboardingState;
+      },
+    },
   ),
 );

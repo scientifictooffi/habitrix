@@ -26,13 +26,13 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
       ]}
     >
       <View style={styles.topBar}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← Назад</Text>
+        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
         </Pressable>
       </View>
 
-      <Text style={styles.title}>Выбери время напоминания</Text>
-      <Text style={styles.subtitle}>Можно изменить позже</Text>
+      <Text style={styles.title}>Когда напоминать?</Text>
+      <Text style={styles.subtitle}>Можно изменить позже в настройках</Text>
 
       <View style={styles.timeBlock}>
         {TIME_OPTIONS.map(time => {
@@ -63,9 +63,21 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Напоминания включены</Text>
-        <Switch value={reminderEnabled} onValueChange={setReminderEnabled} />
+        <View>
+          <Text style={styles.switchLabel}>Напоминания включены</Text>
+          <Text style={styles.switchHint}>
+            Лёгкий пинг, чтобы не забыть отметить
+          </Text>
+        </View>
+        <Switch
+          value={reminderEnabled}
+          onValueChange={setReminderEnabled}
+          trackColor={{ false: 'rgba(255,255,255,0.12)', true: '#FFFFFF' }}
+          thumbColor={reminderEnabled ? '#000000' : '#888888'}
+        />
       </View>
+
+      <View style={{ flex: 1 }} />
 
       <Pressable
         style={styles.nextButton}
@@ -80,78 +92,98 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F14',
-    paddingHorizontal: 24,
+    backgroundColor: '#000000',
+    paddingHorizontal: 22,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   backText: {
-    color: '#F5F7FB',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 22,
+    lineHeight: 22,
     fontWeight: '600',
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#F5F7FB',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
   subtitle: {
     marginTop: 6,
     fontSize: 15,
-    color: '#9AA4B2',
-    marginBottom: 20,
+    color: 'rgba(255,255,255,0.55)',
+    marginBottom: 22,
   },
   timeBlock: {
     gap: 10,
   },
   timeButton: {
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
     borderWidth: 1,
-    borderColor: '#2C3440',
-    backgroundColor: '#141A22',
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   timeButtonSelected: {
-    borderColor: '#7C5CFF',
-    backgroundColor: 'rgba(124, 92, 255, 0.12)',
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   timeButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   timeText: {
-    color: '#F5F7FB',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   timeTextSelected: {
-    color: '#F5F7FB',
+    color: '#FFFFFF',
   },
   timeTextDisabled: {
-    color: '#9AA4B2',
+    color: 'rgba(255,255,255,0.55)',
   },
   switchRow: {
-    marginTop: 20,
+    marginTop: 22,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   switchLabel: {
-    color: '#F5F7FB',
+    color: '#FFFFFF',
     fontSize: 15,
+    fontWeight: '600',
+  },
+  switchHint: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 13,
+    marginTop: 2,
   },
   nextButton: {
-    marginTop: 'auto',
-    backgroundColor: '#7C5CFF',
-    paddingVertical: 14,
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: 'center',
   },
   nextButtonText: {
-    color: '#0B0F14',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '700',
   },

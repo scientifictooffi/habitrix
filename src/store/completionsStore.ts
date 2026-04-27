@@ -1,16 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-const storage = {
-  getItem: async (name: string) => AsyncStorage.getItem(name),
-  setItem: async (name: string, value: unknown) =>
-    AsyncStorage.setItem(
-      name,
-      typeof value === 'string' ? value : JSON.stringify(value),
-    ),
-  removeItem: async (name: string) => AsyncStorage.removeItem(name),
-};
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 function getTodayKey(): string {
   const d = new Date();
@@ -51,6 +41,9 @@ export const useCompletionsStore = create<CompletionsState>()(
         return list.includes(habitId);
       },
     }),
-    { name: 'habitrix-completions', storage },
+    {
+      name: 'habitrix-completions',
+      storage: createJSONStorage(() => AsyncStorage),
+    },
   ),
 );

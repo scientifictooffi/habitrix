@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -16,65 +16,36 @@ import {
   getCurrentStreak,
   getDateKey,
   getWeekDateKeys,
-  isDayComplete,
-} from '../utils/streak.ts';
+} from '../utils/streak';
+import HabitCard from '../components/HabitCard';
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
-  const goal = useOnboardingStore(state => state.goal);
   const habits = useOnboardingStore(state => state.habits);
   const selectedHabits = useOnboardingStore(state => state.selectedHabits);
-  const reminderTime = useOnboardingStore(state => state.reminderTime);
-  const reminderEnabled = useOnboardingStore(state => state.reminderEnabled);
-
-  const GOAL_LABELS: Record<string, string> = {
-    health: 'Здоровье',
-    productivity: 'Продуктивность',
-    discipline: 'Дисциплина',
-  };
-
-  const goalLabel = goal ? GOAL_LABELS[goal] ?? goal : '—';
+  const toggleHabit = useOnboardingStore(state => state.toggleHabit);
+  const addCustomHabit = useOnboardingStore(state => state.addCustomHabit);
 
   const completions = useCompletionsStore(s => s.completions);
   const toggleCompletion = useCompletionsStore(s => s.toggleCompletion);
   const isCompletedToday = useCompletionsStore(s => s.isCompletedToday);
 
-  const selectedHabitEntries = selectedHabits
-    .map(id => {
-      const habit = habits.find(h => h.id === id);
-      return habit ? { id, title: habit.title } : null;
-    })
-    .filter(Boolean) as { id: string; title: string }[];
-
   const todayKey = getDateKey(new Date());
-  const weekDateKeys = getWeekDateKeys();
-  const dayLabels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-  const week = weekDateKeys.map((dateKey, i) => {
-    const isToday = dateKey === todayKey;
-    const complete = isDayComplete(dateKey, selectedHabits, completions);
-    let status: 'done' | 'missed' | 'today' = isToday
-      ? 'today'
-      : complete
-      ? 'done'
-      : 'missed';
-    return { label: dayLabels[i], status };
-  });
-  const currentStreak = getCurrentStreak(completions, selectedHabits, todayKey);
+  const weekKeys = useMemo(() => getWeekDateKeys(), []);
 
-  const completedTodayCount = selectedHabits.filter(id =>
-    isCompletedToday(id),
-  ).length;
-  const totalHabits = selectedHabitEntries.length;
-  const toggleHabit = useOnboardingStore(state => state.toggleHabit);
-  const addCustomHabit = useOnboardingStore(state => state.addCustomHabit);
+  const selectedHabitEntries = selectedHabits
+    .map(id => habits.find(h => h.id === id))
+    .filter(Boolean) as ReturnType<typeof habits.filter>;
+
+  const featured = selectedHabitEntries[0];
+  const rest = selectedHabitEntries.slice(1);
 
   const [addHabitModalVisible, setAddHabitModalVisible] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
 
-  const canAddMore = selectedHabits.length < 3;
   const availableHabits = habits.filter(h => !selectedHabits.includes(h.id));
 
   const openAddHabitModal = () => {
@@ -98,103 +69,100 @@ export default function DashboardScreen() {
     closeAddHabitModal();
   };
 
+  const buildWeek = (habitId: string): boolean[] =>
+    weekKeys.map(k => (completions[k] ?? []).includes(habitId));
+
+  const streakFor = (habitId: string) =>
+    getCurrentStreak(completions, [habitId], todayKey);
+
   return (
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 },
+        { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 12 },
       ]}
     >
-      <View style={styles.titleRow}>
-        <View>
-          <Text style={styles.title}>Сегодня</Text>
-          <Text style={styles.subtitle}>Твой план на день</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.brandRow}>
+          <View style={styles.brandDot} />
+          <Text style={styles.brandText}>HABITRIX</Text>
         </View>
+
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Наши привычки</Text>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => navigation.navigate('Feed')}
+              style={styles.iconBtn}
+            >
+              <Text style={styles.iconBtnText}>♡</Text>
+            </Pressable>
+            <Pressable onPress={openAddHabitModal} style={styles.iconBtn}>
+              <Text style={styles.iconBtnText}>+</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {selectedHabitEntries.length === 0 ? (
+          <Pressable style={styles.emptyCard} onPress={openAddHabitModal}>
+            <Text style={styles.emptyTitle}>Пока пусто</Text>
+            <Text style={styles.emptySubtitle}>
+              Добавь свою первую привычку
+            </Text>
+          </Pressable>
+        ) : (
+          <>
+            {featured && (
+              <View style={styles.featuredWrap}>
+                <HabitCard
+                  size="featured"
+                  title={featured.title}
+                  subtitle={featured.subtitle}
+                  icon={featured.icon}
+                  theme={featured.theme}
+                  week={buildWeek(featured.id)}
+                  completedToday={isCompletedToday(featured.id)}
+                  onToggle={() => toggleCompletion(featured.id)}
+                  streak={streakFor(featured.id)}
+                />
+              </View>
+            )}
+
+            <View style={styles.grid}>
+              {rest.map((habit, idx) => (
+                <View
+                  key={habit.id}
+                  style={[
+                    styles.gridItem,
+                    idx % 2 === 0 ? styles.gridLeft : styles.gridRight,
+                  ]}
+                >
+                  <HabitCard
+                    size="compact"
+                    title={habit.title}
+                    subtitle={habit.subtitle}
+                    icon={habit.icon}
+                    theme={habit.theme}
+                    week={buildWeek(habit.id)}
+                    completedToday={isCompletedToday(habit.id)}
+                    onToggle={() => toggleCompletion(habit.id)}
+                  />
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
         <Pressable
           onPress={() => navigation.navigate('Stats')}
           style={styles.statsLink}
         >
-          <Text style={styles.statsLinkText}>Статистика</Text>
+          <Text style={styles.statsLinkText}>Открыть статистику →</Text>
         </Pressable>
-      </View>
-
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Цель</Text>
-        <Text style={styles.summaryValue}>{goalLabel}</Text>
-
-        <Text style={[styles.summaryTitle, styles.sectionSpacing]}>
-          Напоминания
-        </Text>
-        <Text style={styles.summaryValue}>
-          {reminderEnabled ? reminderTime : 'выключены'}
-        </Text>
-      </View>
-      <View style={styles.streakCard}>
-        <Text style={styles.streakText}>🔥 {currentStreak} дней подряд</Text>
-
-        <View style={styles.weekRow}>
-          {week.map(day => (
-            <View key={day.label} style={styles.weekDay}>
-              <Text
-                style={[
-                  styles.weekLabel,
-                  day.status === 'today' && styles.weekLabelToday,
-                ]}
-              >
-                {day.label}
-              </Text>
-              <View
-                style={[
-                  styles.weekDot,
-                  day.status === 'done' && styles.weekDotDone,
-                  day.status === 'missed' && styles.weekDotMissed,
-                  day.status === 'today' && styles.weekDotToday,
-                ]}
-              />
-              {day.status === 'today' && (
-                <Text style={styles.todayLabel}>Сегодня</Text>
-              )}
-            </View>
-          ))}
-        </View>
-      </View>
-      <Text style={styles.sectionTitle}>Привычки</Text>
-      {totalHabits > 0 && (
-        <Text style={styles.progressText}>
-          Выполнено {completedTodayCount} из {totalHabits}
-        </Text>
-      )}
-
-      <ScrollView
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {selectedHabitEntries.length > 0 ? (
-          selectedHabitEntries.map(({ id, title }) => (
-            <View key={id} style={styles.habitCard}>
-              <Text style={styles.habitTitle}>{title}</Text>
-              <Pressable
-                style={[
-                  styles.doneButton,
-                  isCompletedToday(id) && styles.doneButtonCompleted,
-                ]}
-                onPress={() => toggleCompletion(id)}
-              >
-                <Text style={styles.doneButtonText}>
-                  {isCompletedToday(id) ? 'Выполнено' : 'Выполнено'}
-                </Text>
-              </Pressable>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>Пока нет выбранных привычек</Text>
-        )}
       </ScrollView>
-
-      <Pressable style={styles.addButton} onPress={openAddHabitModal}>
-        <Text style={styles.addButtonText}>Добавить привычку</Text>
-      </Pressable>
 
       <Modal visible={addHabitModalVisible} transparent animationType="fade">
         <Pressable style={styles.modalOverlay} onPress={closeAddHabitModal}>
@@ -218,12 +186,15 @@ export default function DashboardScreen() {
                         style={styles.modalHabitCard}
                         onPress={() => handleSelectHabit(habit.id)}
                       >
-                        <Text style={styles.modalHabitTitle}>
-                          {habit.title}
-                        </Text>
-                        <Text style={styles.modalHabitSubtitle}>
-                          {habit.subtitle}
-                        </Text>
+                        <Text style={styles.modalHabitIcon}>{habit.icon}</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.modalHabitTitle}>
+                            {habit.title}
+                          </Text>
+                          <Text style={styles.modalHabitSubtitle}>
+                            {habit.subtitle}
+                          </Text>
+                        </View>
                       </Pressable>
                     ))}
                   </ScrollView>
@@ -236,7 +207,9 @@ export default function DashboardScreen() {
                   style={styles.modalCustomButton}
                   onPress={() => setShowCustomForm(true)}
                 >
-                  <Text style={styles.addButtonText}>Добавить свою</Text>
+                  <Text style={styles.modalCustomButtonText}>
+                    Добавить свою
+                  </Text>
                 </Pressable>
               </>
             ) : (
@@ -285,247 +258,180 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F14',
-    paddingHorizontal: 24,
+    backgroundColor: '#000000',
+    paddingHorizontal: 18,
+  },
+  scrollContent: {
+    paddingBottom: 32,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  brandDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    marginRight: 8,
+  },
+  brandText: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.5,
   },
   titleRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 14,
+    paddingHorizontal: 4,
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#F5F7FB',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
-  subtitle: {
-    marginTop: 6,
-    fontSize: 15,
-    color: '#9AA4B2',
-  },
-  statsLink: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  statsLinkText: {
-    color: '#7C5CFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  summaryCard: {
-    backgroundColor: '#141A22',
-    borderWidth: 1,
-    borderColor: '#2C3440',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
-  },
-  summaryTitle: {
-    color: '#9AA4B2',
-    fontSize: 13,
-  },
-  summaryValue: {
-    color: '#F5F7FB',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  sectionSpacing: {
-    marginTop: 12,
-  },
-  sectionTitle: {
-    color: '#F5F7FB',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: 12,
-  },
-  habitCard: {
-    backgroundColor: '#141A22',
-    borderWidth: 1,
-    borderColor: '#2C3440',
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
+  headerActions: {
     flexDirection: 'row',
+    gap: 8,
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
-  habitTitle: {
-    color: '#F5F7FB',
-    fontSize: 15,
-    fontWeight: '600',
+  iconBtnText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '500',
   },
-  doneButton: {
-    backgroundColor: '#7C5CFF',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+  featuredWrap: {
+    marginBottom: 12,
   },
-  doneButtonCompleted: {
-    backgroundColor: '#2C3440',
-    opacity: 0.9,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
   },
-  doneButtonText: {
-    color: '#0B0F14',
+  gridItem: {
+    width: '50%',
+    paddingHorizontal: 6,
+    marginBottom: 12,
+  },
+  gridLeft: {},
+  gridRight: {},
+  emptyCard: {
+    borderRadius: 22,
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: '700',
-    fontSize: 12,
   },
-  emptyText: {
-    color: '#9AA4B2',
+  emptySubtitle: {
+    color: 'rgba(255,255,255,0.55)',
+    marginTop: 6,
     fontSize: 14,
   },
-  addButton: {
-    marginTop: 12,
-    backgroundColor: '#141A22',
-    borderWidth: 1,
-    borderColor: '#2C3440',
-    borderRadius: 14,
-    paddingVertical: 12,
+  statsLink: {
+    marginTop: 18,
     alignItems: 'center',
   },
-  addButtonText: {
-    color: '#F5F7FB',
+  statsLinkText: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 14,
     fontWeight: '600',
-    fontSize: 15,
-  },
-  streakCard: {
-    backgroundColor: '#141A22',
-    borderWidth: 1,
-    borderColor: '#2C3440',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
-  },
-  streakText: {
-    color: '#F5F7FB',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  weekDay: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  weekLabel: {
-    color: '#9AA4B2',
-    fontSize: 12,
-  },
-  weekLabelToday: {
-    color: '#BDAFFF',
-    fontWeight: '600',
-  },
-  todayLabel: {
-    fontSize: 9,
-    color: '#9AA4B2',
-    marginTop: 2,
-  },
-  weekDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#2C3440',
-  },
-  weekDotDone: {
-    backgroundColor: '#7C5CFF',
-  },
-  weekDotMissed: {
-    backgroundColor: '#2C3440',
-  },
-  weekDotToday: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#7C5CFF',
-    backgroundColor: 'rgba(124, 92, 255, 0.2)',
-    shadowColor: '#7C5CFF',
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 2,
-  },
-  progressText: {
-    color: '#9AA4B2',
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  addButtonDisabled: {
-    opacity: 0.5,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   modalCard: {
-    backgroundColor: '#141A22',
-    borderRadius: 16,
+    backgroundColor: '#0F0F12',
+    borderRadius: 22,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#2C3440',
+    borderColor: 'rgba(255,255,255,0.08)',
     maxHeight: '80%',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F5F7FB',
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   modalScroll: {
-    maxHeight: 220,
+    maxHeight: 320,
     marginBottom: 12,
   },
   modalHabitCard: {
-    backgroundColor: '#0B0F14',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#2C3440',
+    borderColor: 'rgba(255,255,255,0.06)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalHabitIcon: {
+    fontSize: 22,
   },
   modalHabitTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#F5F7FB',
+    color: '#FFFFFF',
   },
   modalHabitSubtitle: {
     fontSize: 13,
-    color: '#9AA4B2',
+    color: 'rgba(255,255,255,0.55)',
     marginTop: 2,
   },
   modalEmptyText: {
-    color: '#9AA4B2',
+    color: 'rgba(255,255,255,0.55)',
     fontSize: 14,
     marginBottom: 12,
   },
   modalCustomButton: {
     borderWidth: 1,
-    borderColor: '#2C3440',
-    borderRadius: 12,
-    paddingVertical: 10,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 14,
+    paddingVertical: 12,
     alignItems: 'center',
     marginBottom: 12,
   },
+  modalCustomButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 15,
+  },
   modalInput: {
-    backgroundColor: '#0B0F14',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#2C3440',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#F5F7FB',
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   modalActions: {
@@ -539,29 +445,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#2C3440',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   modalButtonText: {
-    color: '#F5F7FB',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   modalButtonPrimary: {
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 10,
-    backgroundColor: '#7C5CFF',
+    backgroundColor: '#FFFFFF',
   },
   modalButtonPrimaryText: {
-    color: '#0B0F14',
+    color: '#000000',
     fontWeight: '700',
   },
   modalButtonDisabled: {
-    backgroundColor: '#2C3440',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   modalCloseButton: {
     paddingVertical: 10,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#2C3440',
+    borderTopColor: 'rgba(255,255,255,0.08)',
   },
 });

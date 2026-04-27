@@ -11,7 +11,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppleButton } from '@invertase/react-native-apple-authentication';
-import { useOnboardingStore } from '../store/onboardingStore.ts';
+import { useOnboardingStore } from '../store/onboardingStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Auth'>;
 
@@ -25,15 +25,15 @@ export default function AuthScreen({ navigation }: Props) {
 
   const GOAL_LABELS: Record<string, string> = {
     health: 'Здоровье',
-    productivity: 'продуктивность',
-    discipline: 'дисциплина',
+    productivity: 'Продуктивность',
+    discipline: 'Дисциплина',
   };
 
   const goalLabel = goal ? GOAL_LABELS[goal] ?? goal : '—';
 
-  const selectedHabitTitles = selectedHabits
-    .map(id => habits.find(h => h.id === id)?.title)
-    .filter(Boolean);
+  const selectedHabitItems = selectedHabits
+    .map(id => habits.find(h => h.id === id))
+    .filter(Boolean) as { title: string; icon: string }[];
 
   return (
     <View
@@ -43,83 +43,94 @@ export default function AuthScreen({ navigation }: Props) {
       ]}
     >
       <View style={styles.topBar}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← Назад</Text>
+        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
         </Pressable>
       </View>
 
       <Text style={styles.title}>Сохрани прогресс</Text>
       <Text style={styles.subtitle}>
-        Создай аккаунт, чтобы не потерять привычки
+        Войди, чтобы привычки и серии не потерялись
       </Text>
 
-      {Platform.OS === 'ios' ? (
-        <AppleButton
-          buttonStyle={AppleButton.Style.WHITE}
-          buttonType={AppleButton.Type.SIGN_IN}
-          style={styles.appleButton}
-          onPress={() => navigation.navigate('Dashboard')}
-        />
-      ) : (
-        <Pressable
-          style={[styles.button, styles.apple]}
-          onPress={() => navigation.navigate('Dashboard')}
-        ></Pressable>
-      )}
-
-      <Pressable
-        style={styles.googleButton}
-        onPress={() => navigation.navigate('Dashboard')}
-      >
-        <Image
-          source={require('../logo/Google_logo.png')}
-          style={styles.googleIcon}
-        />
-        <Text style={styles.googleText}>Sign in with Google</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.button, styles.email]}
-        onPress={() => navigation.navigate('Dashboard')}
-      >
-        <Text style={styles.emailText}>Continue with Email</Text>
-      </Pressable>
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>Твой план</Text>
 
-        <Text style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Цель: </Text>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Цель</Text>
           <Text style={styles.summaryValue}>{goalLabel}</Text>
-        </Text>
+        </View>
 
-        <Text style={styles.summaryLabel}>Привычки:</Text>
-        {selectedHabitTitles.length > 0 ? (
-          selectedHabitTitles.map(title => (
-            <Text key={title} style={styles.habitItem}>
-              • {title}
-            </Text>
-          ))
+        <View style={styles.divider} />
+
+        <Text style={styles.summaryLabel}>Привычки</Text>
+        {selectedHabitItems.length > 0 ? (
+          <View style={styles.habitsList}>
+            {selectedHabitItems.map(h => (
+              <View key={h.title} style={styles.habitChip}>
+                <Text style={styles.habitChipIcon}>{h.icon}</Text>
+                <Text style={styles.habitChipText}>{h.title}</Text>
+              </View>
+            ))}
+          </View>
         ) : (
           <Text style={styles.summaryValue}>—</Text>
         )}
 
-        <Text style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Напоминания: </Text>
+        <View style={styles.divider} />
+
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Напоминания</Text>
           <Text style={styles.summaryValue}>
             {reminderEnabled ? reminderTime : 'выключены'}
           </Text>
-        </Text>
+        </View>
       </View>
 
-      <Text style={styles.summaryNote}>
-        Мы сохраним это в аккаунте, чтобы ты не потерял прогресс.
-      </Text>
-      <Pressable
-        style={styles.skipButton}
-        onPress={() => navigation.navigate('Dashboard')}
-      >
-        <Text style={styles.skipText}>Пропустить</Text>
-      </Pressable>
+      <View style={{ flex: 1 }} />
+
+      <View style={styles.buttons}>
+        {Platform.OS === 'ios' ? (
+          <AppleButton
+            buttonStyle={AppleButton.Style.WHITE}
+            buttonType={AppleButton.Type.SIGN_IN}
+            style={styles.appleButton}
+            onPress={() => navigation.navigate('Dashboard')}
+          />
+        ) : (
+          <Pressable
+            style={[styles.button, styles.apple]}
+            onPress={() => navigation.navigate('Dashboard')}
+          >
+            <Text style={styles.appleText}>Продолжить с Apple</Text>
+          </Pressable>
+        )}
+
+        <Pressable
+          style={styles.googleButton}
+          onPress={() => navigation.navigate('Dashboard')}
+        >
+          <Image
+            source={require('../logo/Google_logo.png')}
+            style={styles.googleIcon}
+          />
+          <Text style={styles.googleText}>Продолжить с Google</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, styles.email]}
+          onPress={() => navigation.navigate('Dashboard')}
+        >
+          <Text style={styles.emailText}>Продолжить по email</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.skipButton}
+          onPress={() => navigation.navigate('Dashboard')}
+        >
+          <Text style={styles.skipText}>Пропустить</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -127,127 +138,158 @@ export default function AuthScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F14',
-    paddingHorizontal: 24,
+    backgroundColor: '#000000',
+    paddingHorizontal: 22,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   backText: {
-    color: '#F5F7FB',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 22,
+    lineHeight: 22,
     fontWeight: '600',
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#F5F7FB',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
   subtitle: {
     marginTop: 6,
     fontSize: 15,
-    color: '#9AA4B2',
-    marginBottom: 24,
+    color: 'rgba(255,255,255,0.55)',
+    marginBottom: 18,
+  },
+  summaryCard: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 18,
+    padding: 16,
+  },
+  summaryTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  summaryLabel: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 14,
+  },
+  summaryValue: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginVertical: 10,
+  },
+  habitsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+  },
+  habitChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  habitChipIcon: {
+    fontSize: 13,
+  },
+  habitChipText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  buttons: {
+    gap: 10,
   },
   button: {
     height: 52,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
   },
   apple: {
-    backgroundColor: '#F5F7FB',
+    backgroundColor: '#FFFFFF',
   },
   appleButton: {
     height: 52,
     width: '100%',
-    marginBottom: 12,
   },
   appleText: {
-    color: '#0B0F14',
+    color: '#000000',
     fontWeight: '700',
     fontSize: 16,
   },
   googleButton: {
     height: 52,
     width: '100%',
-    borderRadius: 8,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // ✅ центрируем
-    backgroundColor: '#131314',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: '#2A313C', // мягче цвет
-    marginBottom: 12,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
-
   googleIcon: {
     width: 20,
     height: 20,
     marginRight: 12,
   },
   googleText: {
-    color: '#E3E3E3',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
   },
-
   email: {
-    backgroundColor: '#131314',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: '#2A313C',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   emailText: {
-    color: '#E3E3E3',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
   },
   skipButton: {
-    marginTop: 'auto',
+    marginTop: 4,
     alignItems: 'center',
+    paddingVertical: 8,
   },
   skipText: {
-    color: '#9AA4B2',
+    color: 'rgba(255,255,255,0.55)',
     fontSize: 14,
     fontWeight: '600',
-  },
-  summaryCard: {
-    marginTop: 16,
-    backgroundColor: '#141A22',
-    borderWidth: 1,
-    borderColor: '#2C3440',
-    borderRadius: 14,
-    padding: 14,
-  },
-  summaryTitle: {
-    color: '#F5F7FB',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  summaryRow: {
-    marginTop: 6,
-  },
-  summaryLabel: {
-    color: '#9AA4B2',
-    fontSize: 14,
-  },
-  summaryValue: {
-    color: '#F5F7FB',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  habitItem: {
-    color: '#F5F7FB',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  summaryNote: {
-    marginTop: 10,
-    color: '#9AA4B2',
-    fontSize: 13,
   },
 });
