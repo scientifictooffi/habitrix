@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+
+
 function getTodayKey(): string {
   const d = new Date();
   const y = d.getFullYear();
@@ -15,6 +17,7 @@ type CompletionsState = {
   completions: Record<string, string[]>;
   toggleCompletion: (habitId: string) => void;
   isCompletedToday: (habitId: string) => boolean;
+  resetCompletions: () => void;
 };
 
 export const useCompletionsStore = create<CompletionsState>()(
@@ -40,6 +43,8 @@ export const useCompletionsStore = create<CompletionsState>()(
         const list = get().completions[today] ?? [];
         return list.includes(habitId);
       },
+
+      resetCompletions: () => set({ completions: {} }),
     }),
     {
       name: 'habitrix-completions',

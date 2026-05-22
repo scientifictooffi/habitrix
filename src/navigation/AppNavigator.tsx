@@ -7,6 +7,8 @@ import AuthScreen from '../screens/AuthScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import StatsScreen from '../screens/StatsScreen';
 import FeedScreen from '../screens/FeedScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import { useSessionStore } from '../store/sessionStore';
 
 export type RootStackParamList = {
   Value: undefined;
@@ -17,13 +19,17 @@ export type RootStackParamList = {
   Dashboard: undefined;
   Stats: undefined;
   Feed: undefined;
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const hasEnteredApp = useSessionStore(state => state.hasEnteredApp);
+
   return (
     <Stack.Navigator
+      initialRouteName={hasEnteredApp ? 'Dashboard' : 'Value'}
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: '#000000' },
@@ -44,6 +50,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="Stats" component={StatsScreen} />
       <Stack.Screen name="Feed" component={FeedScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }

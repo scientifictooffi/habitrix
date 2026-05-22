@@ -12,6 +12,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppleButton } from '@invertase/react-native-apple-authentication';
 import { useOnboardingStore } from '../store/onboardingStore';
+import { useSessionStore } from '../store/sessionStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Auth'>;
 
@@ -22,6 +23,12 @@ export default function AuthScreen({ navigation }: Props) {
   const selectedHabits = useOnboardingStore(state => state.selectedHabits);
   const reminderTime = useOnboardingStore(state => state.reminderTime);
   const reminderEnabled = useOnboardingStore(state => state.reminderEnabled);
+  const enterApp = useSessionStore(state => state.enterApp);
+
+  const goToDashboard = () => {
+    enterApp();
+    navigation.navigate('Dashboard');
+  };
 
   const GOAL_LABELS: Record<string, string> = {
     health: 'Здоровье',
@@ -95,21 +102,18 @@ export default function AuthScreen({ navigation }: Props) {
             buttonStyle={AppleButton.Style.WHITE}
             buttonType={AppleButton.Type.SIGN_IN}
             style={styles.appleButton}
-            onPress={() => navigation.navigate('Dashboard')}
+            onPress={goToDashboard}
           />
         ) : (
           <Pressable
             style={[styles.button, styles.apple]}
-            onPress={() => navigation.navigate('Dashboard')}
+            onPress={goToDashboard}
           >
             <Text style={styles.appleText}>Продолжить с Apple</Text>
           </Pressable>
         )}
 
-        <Pressable
-          style={styles.googleButton}
-          onPress={() => navigation.navigate('Dashboard')}
-        >
+        <Pressable style={styles.googleButton} onPress={goToDashboard}>
           <Image
             source={require('../logo/Google_logo.png')}
             style={styles.googleIcon}
@@ -119,15 +123,12 @@ export default function AuthScreen({ navigation }: Props) {
 
         <Pressable
           style={[styles.button, styles.email]}
-          onPress={() => navigation.navigate('Dashboard')}
+          onPress={goToDashboard}
         >
           <Text style={styles.emailText}>Продолжить по email</Text>
         </Pressable>
 
-        <Pressable
-          style={styles.skipButton}
-          onPress={() => navigation.navigate('Dashboard')}
-        >
+        <Pressable style={styles.skipButton} onPress={goToDashboard}>
           <Text style={styles.skipText}>Пропустить</Text>
         </Pressable>
       </View>

@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCompletionsStore } from '../store/completionsStore';
 import { useOnboardingStore } from '../store/onboardingStore';
@@ -21,7 +23,8 @@ import HabitCard from '../components/HabitCard';
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<any>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList, 'Dashboard'>>();
 
   const habits = useOnboardingStore(state => state.habits);
   const selectedHabits = useOnboardingStore(state => state.selectedHabits);
@@ -94,6 +97,12 @@ export default function DashboardScreen() {
         <View style={styles.titleRow}>
           <Text style={styles.title}>Наши привычки</Text>
           <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => navigation.navigate('Settings')}
+              style={styles.iconBtn}
+            >
+              <Text style={styles.iconBtnText}>⚙</Text>
+            </Pressable>
             <Pressable
               onPress={() => navigation.navigate('Feed')}
               style={styles.iconBtn}

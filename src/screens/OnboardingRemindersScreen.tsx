@@ -4,10 +4,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOnboardingStore } from '../store/onboardingStore';
+import { REMINDER_TIME_OPTIONS } from '../constants/reminders';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingReminders'>;
-
-const TIME_OPTIONS = ['08:00', '12:00', '18:00', '21:00'];
 
 export default function OnboardingRemindersScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
@@ -35,7 +34,7 @@ export default function OnboardingRemindersScreen({ navigation }: Props) {
       <Text style={styles.subtitle}>Можно изменить позже в настройках</Text>
 
       <View style={styles.timeBlock}>
-        {TIME_OPTIONS.map(time => {
+        {REMINDER_TIME_OPTIONS.map(time => {
           const isSelected = reminderTime === time;
           return (
             <Pressable
