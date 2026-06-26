@@ -132,7 +132,7 @@ export default function SettingsScreen({ navigation }: Props) {
           <View style={{ flex: 1, paddingRight: 12 }}>
             <Text style={styles.switchLabel}>Напоминания включены</Text>
             <Text style={styles.switchHint}>
-              Push подключим в следующем обновлении
+              Локальное напоминание каждый день в выбранное время
             </Text>
           </View>
           <Switch

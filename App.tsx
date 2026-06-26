@@ -4,6 +4,7 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useSessionStore } from './src/store/sessionStore';
+import { useReminderScheduler } from './src/hooks/useReminderScheduler';
 
 const NavTheme = {
   ...DefaultTheme,
@@ -22,6 +23,8 @@ export default function App() {
   const [ready, setReady] = useState(() =>
     useSessionStore.persist.hasHydrated(),
   );
+
+  useReminderScheduler();
 
   useEffect(() => {
     const markReady = () => setReady(true);
