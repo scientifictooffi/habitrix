@@ -8,6 +8,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import StatsScreen from '../screens/StatsScreen';
 import FeedScreen from '../screens/FeedScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import PaywallScreen from '../screens/PaywallScreen';
 import { useSessionStore } from '../store/sessionStore';
 
 export type RootStackParamList = {
@@ -20,6 +21,9 @@ export type RootStackParamList = {
   Stats: undefined;
   Feed: undefined;
   Settings: undefined;
+  Paywall: {
+    source?: 'dashboard_add' | 'onboarding' | 'settings';
+  } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -51,6 +55,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Stats" component={StatsScreen} />
       <Stack.Screen name="Feed" component={FeedScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Paywall" component={PaywallScreen} />
     </Stack.Navigator>
   );
 }

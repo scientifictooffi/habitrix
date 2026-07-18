@@ -13,6 +13,8 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GradientBackground from '../components/GradientBackground';
 import { useOnboardingStore } from '../store/onboardingStore';
+import { useSubscriptionStore } from '../store/subscriptionStore';
+import { FREE_HABIT_LIMIT } from '../constants/habitLimits';
 import { getTheme } from '../utils/habitTheme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingHabits'>;
@@ -25,6 +27,7 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
   const selectedHabits = useOnboardingStore(state => state.selectedHabits);
   const toggleHabit = useOnboardingStore(state => state.toggleHabit);
   const addCustomHabit = useOnboardingStore(state => state.addCustomHabit);
+  const isPremium = useSubscriptionStore(state => state.isPremium);
   const isNextDisabled = selectedHabits.length === 0;
 
   const openModal = () => setIsModalVisible(true);
@@ -35,8 +38,21 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
   const handleAddCustomHabit = () => {
     const title = customTitle.trim();
     if (!title) return;
-    addCustomHabit(title);
-    closeModal();
+    const result = addCustomHabit(title);
+    if (result === 'limit_reached') {
+      closeModal();
+      navigation.navigate('Paywall', { source: 'onboarding' });
+      return;
+    }
+    if (result === 'added') {
+      closeModal();
+    }
+  };
+  const handleToggleHabit = (habitId: string) => {
+    const result = toggleHabit(habitId);
+    if (result === 'limit_reached') {
+      navigation.navigate('Paywall', { source: 'onboarding' });
+    }
   };
 
   return (
@@ -53,9 +69,15 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
       </View>
 
       <Text style={styles.title}>Выбери привычки</Text>
-      <Text style={styles.subtitle}>До 3 — это поможет начать</Text>
+      <Text style={styles.subtitle}>
+        {isPremium
+          ? 'Premium: выбирай столько, сколько нужно'
+          : `До ${FREE_HABIT_LIMIT} бесплатно — это поможет начать`}
+      </Text>
       <Text style={styles.counter}>
-        Выбрано {selectedHabits.length} из 3
+        {isPremium
+          ? `Выбрано ${selectedHabits.length} · без лимита`
+          : `Выбрано ${selectedHabits.length} из ${FREE_HABIT_LIMIT}`}
       </Text>
 
       <ScrollView
@@ -69,7 +91,7 @@ export default function OnboardingHabitsScreen({ navigation }: Props) {
           return (
             <Pressable
               key={habit.id}
-              onPress={() => toggleHabit(habit.id)}
+              onPress={() => handleToggleHabit(habit.id)}
               style={[
                 styles.card,
                 isSelected && { borderColor: t.accent, borderWidth: 2 },

@@ -20,6 +20,9 @@ type Props = {
   streak?: number;
   /** Avatars for participants */
   avatars?: string[];
+  /** Replaces completion tap with a safe deactivation control. */
+  isManaging?: boolean;
+  onDeactivate?: () => void;
 };
 
 const RADIUS = 22;
@@ -35,48 +38,78 @@ export default function HabitCard({
   size = 'compact',
   streak,
   avatars = ['🧑'],
+  isManaging = false,
+  onDeactivate,
 }: Props) {
   const t = getTheme(theme);
 
   return (
-    <Pressable onPress={onToggle} style={styles.pressable}>
-      <View style={[styles.card, size === 'featured' ? styles.featured : styles.compact]}>
+    <Pressable
+      onPress={isManaging ? undefined : onToggle}
+      style={styles.pressable}
+    >
+      <View
+        style={[
+          styles.card,
+          size === 'featured' ? styles.featured : styles.compact,
+          isManaging && styles.cardManaging,
+        ]}
+      >
         <GradientBackground colors={t.gradient} radius={RADIUS} angle={135} />
 
         <View style={styles.topRow}>
-          <View style={[styles.iconBubble, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+          <View
+            style={[
+              styles.iconBubble,
+              { backgroundColor: 'rgba(255,255,255,0.08)' },
+            ]}
+          >
             <Text style={styles.iconText}>{icon}</Text>
           </View>
 
-          <View style={styles.topRight}>
-            <View style={styles.avatarRow}>
-              {avatars.slice(0, 2).map((a, i) => (
-                <Avatar
-                  key={i}
-                  emoji={a}
-                  size={22}
-                  style={{ marginLeft: i === 0 ? 0 : -8 }}
-                  background="#1A1F26"
-                />
-              ))}
-            </View>
-
-            <View
-              style={[
-                styles.checkBubble,
-                completedToday && { backgroundColor: t.accent, borderColor: t.accent },
-              ]}
+          {isManaging ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Убрать привычку ${title}`}
+              onPress={onDeactivate}
+              style={styles.deactivateButton}
             >
-              <Text
+              <Text style={styles.deactivateText}>Убрать</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.topRight}>
+              <View style={styles.avatarRow}>
+                {avatars.slice(0, 2).map((a, i) => (
+                  <Avatar
+                    key={i}
+                    emoji={a}
+                    size={22}
+                    style={{ marginLeft: i === 0 ? 0 : -8 }}
+                    background="#1A1F26"
+                  />
+                ))}
+              </View>
+
+              <View
                 style={[
-                  styles.checkText,
-                  completedToday && { color: '#0B0F14' },
+                  styles.checkBubble,
+                  completedToday && {
+                    backgroundColor: t.accent,
+                    borderColor: t.accent,
+                  },
                 ]}
               >
-                ✓
-              </Text>
+                <Text
+                  style={[
+                    styles.checkText,
+                    completedToday && { color: '#0B0F14' },
+                  ]}
+                >
+                  ✓
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
 
         <View style={styles.bottom}>
@@ -125,6 +158,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
+  cardManaging: {
+    borderColor: 'rgba(255,107,107,0.5)',
+  },
   featured: {
     minHeight: 168,
     justifyContent: 'space-between',
@@ -142,6 +178,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  deactivateButton: {
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,80,80,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,107,0.55)',
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+  deactivateText: {
+    color: '#FF8585',
+    fontSize: 12,
+    fontWeight: '800',
   },
   iconBubble: {
     width: 36,

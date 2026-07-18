@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { canAddHabit } from '../constants/habitLimits';
 import { pickThemeFor } from '../utils/habitTheme';
+import { useSubscriptionStore } from './subscriptionStore';
 
 export type Habit = {
   id: string;
@@ -11,6 +13,12 @@ export type Habit = {
   theme: string;
 };
 
+export type HabitOperationResult =
+  | 'added'
+  | 'removed'
+  | 'limit_reached'
+  | 'invalid';
+
 type OnboardingState = {
   goal: string | null;
   habits: Habit[];
@@ -19,8 +27,12 @@ type OnboardingState = {
   reminderEnabled: boolean;
 
   setGoal: (goalId: string) => void;
-  toggleHabit: (habitId: string) => void;
-  addCustomHabit: (title: string, icon?: string, theme?: string) => void;
+  toggleHabit: (habitId: string) => HabitOperationResult;
+  addCustomHabit: (
+    title: string,
+    icon?: string,
+    theme?: string,
+  ) => HabitOperationResult;
   setReminderTime: (time: string) => void;
   setReminderEnabled: (value: boolean) => void;
   resetOnboarding: () => void;
@@ -96,24 +108,48 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       setGoal: goalId => set({ goal: goalId }),
 
-      toggleHabit: habitId =>
+      toggleHabit: habitId => {
+        let result: HabitOperationResult = 'invalid';
+
         set(state => {
-          const selected = state.selectedHabits;
-          if (selected.includes(habitId)) {
-            return { selectedHabits: selected.filter(id => id !== habitId) };
-          }
-          if (selected.length >= 3) {
+          if (!state.habits.some(habit => habit.id === habitId)) {
             return state;
           }
-          return { selectedHabits: [...selected, habitId] };
-        }),
 
-      addCustomHabit: (title, icon, theme) =>
+          const selected = state.selectedHabits;
+          if (selected.includes(habitId)) {
+            result = 'removed';
+            return { selectedHabits: selected.filter(id => id !== habitId) };
+          }
+
+          const isPremium = useSubscriptionStore.getState().isPremium;
+          if (!canAddHabit(selected, state.habits, isPremium)) {
+            result = 'limit_reached';
+            return state;
+          }
+
+          result = 'added';
+          return { selectedHabits: [...selected, habitId] };
+        });
+
+        return result;
+      },
+
+      addCustomHabit: (title, icon, theme) => {
+        let result: HabitOperationResult = 'invalid';
+
         set(state => {
           const trimmed = title.trim();
           if (!trimmed) {
             return state;
           }
+
+          const isPremium = useSubscriptionStore.getState().isPremium;
+          if (!canAddHabit(state.selectedHabits, state.habits, isPremium)) {
+            result = 'limit_reached';
+            return state;
+          }
+
           const id = `custom-${Date.now()}`;
           const newHabit: Habit = {
             id,
@@ -123,16 +159,16 @@ export const useOnboardingStore = create<OnboardingState>()(
             theme: theme ?? pickThemeFor(id),
           };
           const nextHabits = [newHabit, ...state.habits];
-          const nextSelected =
-            state.selectedHabits.length < 3
-              ? [...state.selectedHabits, newHabit.id]
-              : state.selectedHabits;
 
+          result = 'added';
           return {
             habits: nextHabits,
-            selectedHabits: nextSelected,
+            selectedHabits: [...state.selectedHabits, newHabit.id],
           };
-        }),
+        });
+
+        return result;
+      },
 
       setReminderTime: time => set({ reminderTime: time }),
 

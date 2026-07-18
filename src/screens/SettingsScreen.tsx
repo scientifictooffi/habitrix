@@ -16,6 +16,8 @@ import { REMINDER_TIME_OPTIONS } from '../constants/reminders';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { useSessionStore } from '../store/sessionStore';
 import { useCompletionsStore } from '../store/completionsStore';
+import { useSubscriptionStore } from '../store/subscriptionStore';
+import { FREE_HABIT_LIMIT } from '../constants/habitLimits';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -34,6 +36,11 @@ export default function SettingsScreen({ navigation }: Props) {
   const leaveApp = useSessionStore(s => s.leaveApp);
 
   const resetCompletions = useCompletionsStore(s => s.resetCompletions);
+  const isPremium = useSubscriptionStore(s => s.isPremium);
+  const deactivateDevPremium = useSubscriptionStore(
+    s => s.deactivateDevPremium,
+  );
+  const restorePurchases = useSubscriptionStore(s => s.restorePurchases);
 
   const handleStartOver = () => {
     Alert.alert(
@@ -69,6 +76,18 @@ export default function SettingsScreen({ navigation }: Props) {
         onPress: () => signOut(),
       },
     ]);
+  };
+
+  const handleRestorePurchases = async () => {
+    const result = await Promise.resolve(restorePurchases());
+    if (result === 'not_found') {
+      Alert.alert(
+        'Покупки не найдены',
+        'На этом устройстве нет покупок для восстановления. Локальный Premium доступен через экран Premium.',
+      );
+      return;
+    }
+    Alert.alert('Готово', 'Premium восстановлен.');
   };
 
   return (
@@ -142,6 +161,47 @@ export default function SettingsScreen({ navigation }: Props) {
             thumbColor={reminderEnabled ? '#000000' : '#888888'}
           />
         </View>
+
+        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+          Premium
+        </Text>
+        <Pressable
+          disabled={isPremium}
+          onPress={() => navigation.navigate('Paywall', { source: 'settings' })}
+          style={[
+            styles.premiumCard,
+            isPremium && styles.premiumCardActive,
+          ]}
+        >
+          <View style={styles.premiumContent}>
+            <Text style={styles.premiumStatus}>
+              {isPremium ? 'Premium активен' : 'Бесплатный план'}
+            </Text>
+            <Text style={styles.premiumHint}>
+              {isPremium
+                ? 'Локальный режим разработки · привычки без лимита'
+                : `До ${FREE_HABIT_LIMIT} привычек · открой Premium без лимита`}
+            </Text>
+          </View>
+          {!isPremium && <Text style={styles.premiumArrow}>›</Text>}
+        </Pressable>
+
+        {isPremium && (
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={deactivateDevPremium}
+          >
+            <Text style={styles.secondaryButtonText}>
+              Отключить локальный Premium
+            </Text>
+          </Pressable>
+        )}
+        <Pressable
+          style={[styles.secondaryButton, styles.restoreButton]}
+          onPress={handleRestorePurchases}
+        >
+          <Text style={styles.secondaryButtonText}>Восстановить покупки</Text>
+        </Pressable>
 
         <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
           Аккаунт
@@ -281,6 +341,42 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.55)',
     fontSize: 13,
     marginTop: 2,
+  },
+  premiumCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  premiumContent: {
+    flex: 1,
+  },
+  premiumCardActive: {
+    backgroundColor: 'rgba(190,255,80,0.08)',
+    borderColor: 'rgba(190,255,80,0.3)',
+  },
+  premiumStatus: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  premiumHint: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 3,
+  },
+  premiumArrow: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    marginLeft: 12,
+  },
+  restoreButton: {
+    marginTop: 10,
   },
   infoCard: {
     backgroundColor: 'rgba(255,255,255,0.04)',

@@ -14,6 +14,11 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCompletionsStore } from '../store/completionsStore';
 import { useOnboardingStore } from '../store/onboardingStore';
+import { useSubscriptionStore } from '../store/subscriptionStore';
+import {
+  countValidActiveHabitIds,
+  FREE_HABIT_LIMIT,
+} from '../constants/habitLimits';
 import {
   getCurrentStreak,
   getDateKey,
@@ -30,6 +35,7 @@ export default function DashboardScreen() {
   const selectedHabits = useOnboardingStore(state => state.selectedHabits);
   const toggleHabit = useOnboardingStore(state => state.toggleHabit);
   const addCustomHabit = useOnboardingStore(state => state.addCustomHabit);
+  const isPremium = useSubscriptionStore(state => state.isPremium);
 
   const completions = useCompletionsStore(s => s.completions);
   const toggleCompletion = useCompletionsStore(s => s.toggleCompletion);
@@ -48,10 +54,16 @@ export default function DashboardScreen() {
   const [addHabitModalVisible, setAddHabitModalVisible] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
+  const [isManaging, setIsManaging] = useState(false);
 
   const availableHabits = habits.filter(h => !selectedHabits.includes(h.id));
+  const activeHabitCount = countValidActiveHabitIds(selectedHabits, habits);
 
   const openAddHabitModal = () => {
+    if (!isPremium && activeHabitCount >= FREE_HABIT_LIMIT) {
+      navigation.navigate('Paywall', { source: 'dashboard_add' });
+      return;
+    }
     setShowCustomForm(false);
     setCustomTitle('');
     setAddHabitModalVisible(true);
@@ -62,14 +74,34 @@ export default function DashboardScreen() {
     setCustomTitle('');
   };
   const handleSelectHabit = (habitId: string) => {
-    toggleHabit(habitId);
-    closeAddHabitModal();
+    const result = toggleHabit(habitId);
+    if (result === 'limit_reached') {
+      closeAddHabitModal();
+      navigation.navigate('Paywall', { source: 'dashboard_add' });
+      return;
+    }
+    if (result === 'added') {
+      closeAddHabitModal();
+    }
   };
   const handleAddCustomHabit = () => {
     const title = customTitle.trim();
     if (!title) return;
-    addCustomHabit(title);
-    closeAddHabitModal();
+    const result = addCustomHabit(title);
+    if (result === 'limit_reached') {
+      closeAddHabitModal();
+      navigation.navigate('Paywall', { source: 'dashboard_add' });
+      return;
+    }
+    if (result === 'added') {
+      closeAddHabitModal();
+    }
+  };
+  const handleDeactivateHabit = (habitId: string) => {
+    toggleHabit(habitId);
+    if (selectedHabits.length === 1) {
+      setIsManaging(false);
+    }
   };
 
   const buildWeek = (habitId: string): boolean[] =>
@@ -115,6 +147,32 @@ export default function DashboardScreen() {
           </View>
         </View>
 
+        {selectedHabitEntries.length > 0 && (
+          <View style={styles.manageRow}>
+            <Text style={styles.manageHint}>
+              {isManaging
+                ? 'Выбери привычку, которую хочешь убрать'
+                : `${activeHabitCount} активных привычек`}
+            </Text>
+            <Pressable
+              onPress={() => setIsManaging(value => !value)}
+              style={[
+                styles.manageButton,
+                isManaging && styles.manageButtonActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.manageButtonText,
+                  isManaging && styles.manageButtonTextActive,
+                ]}
+              >
+                {isManaging ? 'Готово' : 'Управлять'}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         {selectedHabitEntries.length === 0 ? (
           <Pressable style={styles.emptyCard} onPress={openAddHabitModal}>
             <Text style={styles.emptyTitle}>Пока пусто</Text>
@@ -135,6 +193,8 @@ export default function DashboardScreen() {
                   week={buildWeek(featured.id)}
                   completedToday={isCompletedToday(featured.id)}
                   onToggle={() => toggleCompletion(featured.id)}
+                  isManaging={isManaging}
+                  onDeactivate={() => handleDeactivateHabit(featured.id)}
                   streak={streakFor(featured.id)}
                 />
               </View>
@@ -158,6 +218,8 @@ export default function DashboardScreen() {
                     week={buildWeek(habit.id)}
                     completedToday={isCompletedToday(habit.id)}
                     onToggle={() => toggleCompletion(habit.id)}
+                    isManaging={isManaging}
+                    onDeactivate={() => handleDeactivateHabit(habit.id)}
                   />
                 </View>
               ))}
@@ -326,6 +388,38 @@ const styles = StyleSheet.create({
   },
   featuredWrap: {
     marginBottom: 12,
+  },
+  manageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+    gap: 12,
+  },
+  manageHint: {
+    flex: 1,
+    color: 'rgba(255,255,255,0.48)',
+    fontSize: 12,
+  },
+  manageButton: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+  },
+  manageButtonActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FFFFFF',
+  },
+  manageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  manageButtonTextActive: {
+    color: '#000000',
   },
   grid: {
     flexDirection: 'row',
