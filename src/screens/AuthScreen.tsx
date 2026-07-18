@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -13,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppleButton } from '@invertase/react-native-apple-authentication';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { useSessionStore } from '../store/sessionStore';
+import { signInWithGoogle, AuthError } from '../services/authService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Auth'>;
 
@@ -25,9 +28,52 @@ export default function AuthScreen({ navigation }: Props) {
   const reminderEnabled = useOnboardingStore(state => state.reminderEnabled);
   const enterApp = useSessionStore(state => state.enterApp);
 
+  const [signingIn, setSigningIn] = useState(false);
+
   const goToDashboard = () => {
+    navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
+  };
+
+  const continueAsGuest = () => {
     enterApp();
-    navigation.navigate('Dashboard');
+    goToDashboard();
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (signingIn) {
+      return;
+    }
+    setSigningIn(true);
+    try {
+      await signInWithGoogle();
+      // Session is set by the Firebase auth listener; just navigate.
+      goToDashboard();
+    } catch (err) {
+      if (
+        err instanceof AuthError &&
+        (err.code === 'canceled' || err.code === 'in_progress')
+      ) {
+        return; // user backed out — no error UI needed
+      }
+      const message =
+        err instanceof AuthError
+          ? err.message
+          : 'Не удалось войти через Google. Попробуй ещё раз.';
+      Alert.alert('Вход не выполнен', message);
+    } finally {
+      setSigningIn(false);
+    }
+  };
+
+  const handleEmailSignIn = () => {
+    navigation.navigate('EmailAuth');
+  };
+
+  const handleAppleUnavailable = () => {
+    Alert.alert(
+      'Вход через Apple скоро',
+      'Он появится в ближайшем обновлении. Пока можно войти через Google или email.',
+    );
   };
 
   const GOAL_LABELS: Record<string, string> = {
@@ -97,38 +143,46 @@ export default function AuthScreen({ navigation }: Props) {
       <View style={{ flex: 1 }} />
 
       <View style={styles.buttons}>
-        {Platform.OS === 'ios' ? (
-          <AppleButton
-            buttonStyle={AppleButton.Style.WHITE}
-            buttonType={AppleButton.Type.SIGN_IN}
-            style={styles.appleButton}
-            onPress={goToDashboard}
-          />
-        ) : (
-          <Pressable
-            style={[styles.button, styles.apple]}
-            onPress={goToDashboard}
-          >
-            <Text style={styles.appleText}>Продолжить с Apple</Text>
-          </Pressable>
-        )}
-
-        <Pressable style={styles.googleButton} onPress={goToDashboard}>
-          <Image
-            source={require('../logo/Google_logo.png')}
-            style={styles.googleIcon}
-          />
-          <Text style={styles.googleText}>Продолжить с Google</Text>
+        <Pressable
+          style={styles.googleButton}
+          onPress={handleGoogleSignIn}
+          disabled={signingIn}
+        >
+          {signingIn ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <Image
+                source={require('../logo/Google_logo.png')}
+                style={styles.googleIcon}
+              />
+              <Text style={styles.googleText}>Продолжить с Google</Text>
+            </>
+          )}
         </Pressable>
 
         <Pressable
           style={[styles.button, styles.email]}
-          onPress={goToDashboard}
+          onPress={handleEmailSignIn}
+          disabled={signingIn}
         >
           <Text style={styles.emailText}>Продолжить по email</Text>
         </Pressable>
 
-        <Pressable style={styles.skipButton} onPress={goToDashboard}>
+        {Platform.OS === 'ios' && (
+          <AppleButton
+            buttonStyle={AppleButton.Style.WHITE}
+            buttonType={AppleButton.Type.SIGN_IN}
+            style={styles.appleButton}
+            onPress={handleAppleUnavailable}
+          />
+        )}
+
+        <Pressable
+          style={styles.skipButton}
+          onPress={continueAsGuest}
+          disabled={signingIn}
+        >
           <Text style={styles.skipText}>Пропустить</Text>
         </Pressable>
       </View>

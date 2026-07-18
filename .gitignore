@@ -73,3 +73,10 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Firebase CLI deploy cache
+.firebase/
+
+# Firebase iOS config (contains project identifiers).
+# Private repo? You may safely commit it: `git add -f ios/habitrix/GoogleService-Info.plist`
+ios/habitrix/GoogleService-Info.plist

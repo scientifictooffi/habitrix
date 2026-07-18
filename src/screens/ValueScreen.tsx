@@ -98,14 +98,18 @@ export default function ValueScreen({ navigation }: Props) {
           Продолжая, ты соглашаешься с{' '}
           <Text
             style={styles.link}
-            onPress={() => Linking.openURL('https://yourapp.com/terms')}
+            onPress={() =>
+              Linking.openURL('https://habitrix-3a04b.web.app/terms')
+            }
           >
             Условиями
           </Text>{' '}
           и{' '}
           <Text
             style={styles.link}
-            onPress={() => Linking.openURL('https://yourapp.com/privacy')}
+            onPress={() =>
+              Linking.openURL('https://habitrix-3a04b.web.app/privacy')
+            }
           >
             Политикой
           </Text>

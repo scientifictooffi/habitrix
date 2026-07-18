@@ -15,11 +15,18 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import { REMINDER_TIME_OPTIONS } from '../constants/reminders';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { useSessionStore } from '../store/sessionStore';
+import { signOut as authSignOut } from '../services/authService';
 import { useCompletionsStore } from '../store/completionsStore';
 import { useSubscriptionStore } from '../store/subscriptionStore';
 import { FREE_HABIT_LIMIT } from '../constants/habitLimits';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
+
+const PROVIDER_LABELS: Record<string, string> = {
+  apple: 'Вошли через Apple',
+  google: 'Вошли через Google',
+  password: 'Вошли по email',
+};
 
 export default function SettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
@@ -31,8 +38,9 @@ export default function SettingsScreen({ navigation }: Props) {
   const resetOnboarding = useOnboardingStore(s => s.resetOnboarding);
 
   const isAuthenticated = useSessionStore(s => s.isAuthenticated);
-  const userId = useSessionStore(s => s.userId);
-  const signOut = useSessionStore(s => s.signOut);
+  const userEmail = useSessionStore(s => s.email);
+  const userFullName = useSessionStore(s => s.fullName);
+  const provider = useSessionStore(s => s.provider);
   const leaveApp = useSessionStore(s => s.leaveApp);
 
   const resetCompletions = useCompletionsStore(s => s.resetCompletions);
@@ -52,6 +60,7 @@ export default function SettingsScreen({ navigation }: Props) {
           text: 'Сбросить',
           style: 'destructive',
           onPress: () => {
+            authSignOut();
             resetOnboarding();
             resetCompletions();
             leaveApp();
@@ -73,7 +82,10 @@ export default function SettingsScreen({ navigation }: Props) {
       {
         text: 'Выйти',
         style: 'destructive',
-        onPress: () => signOut(),
+        onPress: () => {
+          // Firebase sign-out; the auth listener clears the local session.
+          authSignOut();
+        },
       },
     ]);
   };
@@ -210,7 +222,11 @@ export default function SettingsScreen({ navigation }: Props) {
           <Text style={styles.infoLabel}>Статус</Text>
           <Text style={styles.infoValue}>
             {isAuthenticated
-              ? `Вошли (${userId ?? 'аккаунт'})`
+              ? `${PROVIDER_LABELS[provider ?? 'password']}${
+                  userFullName || userEmail
+                    ? ` · ${userFullName ?? userEmail}`
+                    : ''
+                }`
               : 'Гость — прогресс только на этом устройстве'}
           </Text>
         </View>

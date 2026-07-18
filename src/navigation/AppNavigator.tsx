@@ -4,11 +4,14 @@ import OnboardingGoalScreen from '../screens/OnboardingGoalScreen';
 import OnboardingHabitsScreen from '../screens/OnboardingHabitsScreen';
 import OnboardingRemindersScreen from '../screens/OnboardingRemindersScreen';
 import AuthScreen from '../screens/AuthScreen';
+import EmailAuthScreen from '../screens/EmailAuthScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import StatsScreen from '../screens/StatsScreen';
 import FeedScreen from '../screens/FeedScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PaywallScreen from '../screens/PaywallScreen';
+import TeamScreen from '../screens/TeamScreen';
+import TeamDetailScreen from '../screens/TeamDetailScreen';
 import { useSessionStore } from '../store/sessionStore';
 
 export type RootStackParamList = {
@@ -17,10 +20,13 @@ export type RootStackParamList = {
   OnboardingHabits: undefined;
   OnboardingReminders: undefined;
   Auth: undefined;
+  EmailAuth: undefined;
   Dashboard: undefined;
   Stats: undefined;
   Feed: undefined;
   Settings: undefined;
+  Team: undefined;
+  TeamDetail: { groupId: string };
   Paywall: {
     source?: 'dashboard_add' | 'onboarding' | 'settings';
   } | undefined;
@@ -51,10 +57,13 @@ export default function AppNavigator() {
         component={OnboardingRemindersScreen}
       />
       <Stack.Screen name="Auth" component={AuthScreen} />
+      <Stack.Screen name="EmailAuth" component={EmailAuthScreen} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="Stats" component={StatsScreen} />
       <Stack.Screen name="Feed" component={FeedScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Team" component={TeamScreen} />
+      <Stack.Screen name="TeamDetail" component={TeamDetailScreen} />
       <Stack.Screen name="Paywall" component={PaywallScreen} />
     </Stack.Navigator>
   );
