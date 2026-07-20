@@ -10,8 +10,6 @@ import StatsScreen from '../screens/StatsScreen';
 import FeedScreen from '../screens/FeedScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PaywallScreen from '../screens/PaywallScreen';
-import TeamScreen from '../screens/TeamScreen';
-import TeamDetailScreen from '../screens/TeamDetailScreen';
 import { useSessionStore } from '../store/sessionStore';
 
 export type RootStackParamList = {
@@ -25,8 +23,6 @@ export type RootStackParamList = {
   Stats: undefined;
   Feed: undefined;
   Settings: undefined;
-  Team: undefined;
-  TeamDetail: { groupId: string };
   Paywall: {
     source?: 'dashboard_add' | 'onboarding' | 'settings';
   } | undefined;
@@ -62,8 +58,6 @@ export default function AppNavigator() {
       <Stack.Screen name="Stats" component={StatsScreen} />
       <Stack.Screen name="Feed" component={FeedScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="Team" component={TeamScreen} />
-      <Stack.Screen name="TeamDetail" component={TeamDetailScreen} />
       <Stack.Screen name="Paywall" component={PaywallScreen} />
     </Stack.Navigator>
   );

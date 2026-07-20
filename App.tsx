@@ -6,8 +6,6 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { useSessionStore } from './src/store/sessionStore';
 import { useReminderScheduler } from './src/hooks/useReminderScheduler';
 import { useFirebaseAuthSync } from './src/hooks/useFirebaseAuthSync';
-import { useCloudSync } from './src/hooks/useCloudSync';
-import { useTeamProgressPublisher } from './src/hooks/useTeamProgressPublisher';
 import { configureGoogleSignin } from './src/services/authService';
 
 configureGoogleSignin();
@@ -32,8 +30,6 @@ export default function App() {
 
   useReminderScheduler();
   useFirebaseAuthSync();
-  useCloudSync();
-  useTeamProgressPublisher();
 
   useEffect(() => {
     const markReady = () => setReady(true);

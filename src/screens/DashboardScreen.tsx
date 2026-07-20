@@ -141,12 +141,6 @@ export default function DashboardScreen() {
             >
               <Text style={styles.iconBtnText}>♡</Text>
             </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('Team')}
-              style={styles.iconBtn}
-            >
-              <Text style={styles.iconBtnText}>👥</Text>
-            </Pressable>
             <Pressable onPress={openAddHabitModal} style={styles.iconBtn}>
               <Text style={styles.iconBtnText}>+</Text>
             </Pressable>
