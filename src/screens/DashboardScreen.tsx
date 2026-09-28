@@ -127,7 +127,14 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.titleRow}>
-          <Text style={styles.title}>Наши привычки</Text>
+          <Text
+            style={styles.title}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            Наши привычки
+          </Text>
           <View style={styles.headerActions}>
             <Pressable
               onPress={() => navigation.navigate('Settings')}
@@ -140,6 +147,12 @@ export default function DashboardScreen() {
               style={styles.iconBtn}
             >
               <Text style={styles.iconBtnText}>♡</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('Team')}
+              style={styles.iconBtn}
+            >
+              <Text style={styles.iconBtnText}>👥</Text>
             </Pressable>
             <Pressable onPress={openAddHabitModal} style={styles.iconBtn}>
               <Text style={styles.iconBtnText}>+</Text>
@@ -367,15 +380,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+    flexShrink: 1,
+    marginRight: 8,
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 8,
+    flexShrink: 0,
+    gap: 6,
   },
   iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',

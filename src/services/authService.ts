@@ -1,5 +1,4 @@
 import {
-  getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithCredential,
@@ -9,11 +8,12 @@ import {
   updateProfile,
   GoogleAuthProvider,
   type User as FirebaseUser,
-} from '@react-native-firebase/auth';
+} from '@firebase/auth';
 import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
+import { auth } from '../config/firebaseWeb';
 import { WEB_CLIENT_ID, isGoogleConfigured } from '../config/authConfig';
 import type { AuthProvider } from '../store/sessionStore';
 
@@ -45,9 +45,7 @@ export function configureGoogleSignin() {
   });
 }
 
-const providerFromFirebase = (
-  user: FirebaseUser,
-): AuthProvider => {
+const providerFromFirebase = (user: FirebaseUser): AuthProvider => {
   const id = user.providerData[0]?.providerId;
   if (id === 'google.com') return 'google';
   if (id === 'apple.com') return 'apple';
@@ -93,11 +91,7 @@ export async function signInWithEmail(
   password: string,
 ): Promise<AppUser> {
   try {
-    const cred = await signInWithEmailAndPassword(
-      getAuth(),
-      email.trim(),
-      password,
-    );
+    const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
     return toAppUser(cred.user);
   } catch (err) {
     throw wrapFirebase(err);
@@ -111,7 +105,7 @@ export async function signUpWithEmail(
 ): Promise<AppUser> {
   try {
     const cred = await createUserWithEmailAndPassword(
-      getAuth(),
+      auth,
       email.trim(),
       password,
     );
@@ -119,7 +113,7 @@ export async function signUpWithEmail(
     if (trimmedName) {
       await updateProfile(cred.user, { displayName: trimmedName });
     }
-    return toAppUser(getAuth().currentUser ?? cred.user);
+    return toAppUser(auth.currentUser ?? cred.user);
   } catch (err) {
     throw wrapFirebase(err);
   }
@@ -127,7 +121,7 @@ export async function signUpWithEmail(
 
 export async function resetPassword(email: string): Promise<void> {
   try {
-    await sendPasswordResetEmail(getAuth(), email.trim());
+    await sendPasswordResetEmail(auth, email.trim());
   } catch (err) {
     throw wrapFirebase(err);
   }
@@ -150,8 +144,8 @@ export async function signInWithGoogle(): Promise<AppUser> {
     if (!idToken) {
       throw new AuthError('failed', 'Google не вернул токен. Попробуй ещё раз.');
     }
-    const googleCredential = GoogleAuthProvider.credential(idToken);
-    const cred = await signInWithCredential(getAuth(), googleCredential);
+    const credential = GoogleAuthProvider.credential(idToken);
+    const cred = await signInWithCredential(auth, credential);
     return toAppUser(cred.user);
   } catch (err: any) {
     if (err instanceof AuthError) {
@@ -178,15 +172,14 @@ export async function signInWithGoogle(): Promise<AppUser> {
 
 export async function signOut(): Promise<void> {
   try {
-    const provider = getAuth().currentUser
-      ? providerFromFirebase(getAuth().currentUser!)
-      : null;
-    await fbSignOut(getAuth());
+    const current = auth.currentUser;
+    const provider = current ? providerFromFirebase(current) : null;
+    await fbSignOut(auth);
     if (provider === 'google' && isGoogleConfigured) {
       await GoogleSignin.signOut();
     }
   } catch {
-    // Best-effort: local session is cleared by the auth-state listener anyway.
+    // Best-effort; the auth-state listener clears the local session anyway.
   }
 }
 
@@ -194,7 +187,7 @@ export async function signOut(): Promise<void> {
 export function subscribeToAuthState(
   cb: (user: AppUser | null) => void,
 ): () => void {
-  return onAuthStateChanged(getAuth(), user => {
+  return onAuthStateChanged(auth, user => {
     cb(user ? toAppUser(user) : null);
   });
 }
